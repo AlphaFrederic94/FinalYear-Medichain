@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AllergySevertiy {
+  MILD
+  MODERATE
+  SEVERE
+  LIFE_THREATENING
+}
+
+model Patient {
+  id                String             @id @default(uuid())
+  userDid           String             @unique
+  firstName         String
+  lastName          String
+  dateOfBirth       DateTime?
+  gender            Gender?
+  phone             String?
+  email             String?
+  nationalId        String?
+  bloodGroup        String?
+  countryCode       String             @default("CMR")
+  languagePref      String             @default("fr")
+  address           String?
+  city              String?
+  allergies         Allergy[]
+  emergencyContacts EmergencyContact[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@map("patients")
+}
+
+model Allergy {
+  id          String          @id @default(uuid())
+  patient     Patient         @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId   String
+  substance   String
+  reaction    String?
+  severity    AllergySevertiy @default(MILD)
+  recordedBy  String?
+  createdAt   DateTime        @default(now())
+
+  @@map("allergies")
+}
+
+model EmergencyContact {
+  id           String   @id @default(uuid())
+  patient      Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patientId    String
+  name         String
+  phone        String
+  relationship String?
+  createdAt    DateTime @default(now())
+
+  @@map("emergency_contacts")
+}

@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum FacilityType {
+  HOSPITAL
+  CLINIC
+  PHARMACY
+  LABORATORY
+  HEALTH_CENTER
+}
+
+enum StaffRole {
+  DOCTOR
+  NURSE
+  PHARMACIST
+  LAB_TECHNICIAN
+  FACILITY_ADMIN
+}
+
+model Facility {
+  id             String       @id @default(uuid())
+  name           String
+  facilityType   FacilityType
+  registrationNo String?      @unique
+  address        String?
+  city           String?
+  country        String       @default("CMR")
+  latitude       Float?
+  longitude      Float?
+  phone          String?
+  email          String?
+  active         Boolean      @default(true)
+  staff          Staff[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("facilities")
+}
+
+model Staff {
+  id             String    @id @default(uuid())
+  userDid        String    @unique
+  firstName      String
+  lastName       String
+  role           StaffRole @default(DOCTOR)
+  specialty      String?
+  licenseNo      String?   @unique
+  facility       Facility? @relation(fields: [facilityId], references: [id])
+  facilityId     String?
+  verified       Boolean   @default(false)
+  bio            String?
+  phone          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("staff")
+}

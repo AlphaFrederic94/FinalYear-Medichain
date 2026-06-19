@@ -1,0 +1,10 @@
+node_modules/
+.claude/
+PROJECT_AUDIT_AND_DEPLOYMENT.md
+.env
+.env.*
+*.log
+coverage/
+.DS_Store
+*.tsbuildinfo
+

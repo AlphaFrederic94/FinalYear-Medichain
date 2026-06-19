@@ -1,0 +1,11 @@
+const { cleanEnv, str, port } = require('envalid');
+
+module.exports = cleanEnv(process.env, {
+  NODE_ENV:                 str({ choices: ['development', 'test', 'production'], default: 'development' }),
+  PORT:                     port({ default: 3002 }),
+  SERVICE_NAME:             str({ default: 'patient-service' }),
+  DATABASE_URL:             str(),
+  JWT_SECRET:               str(),
+  INTERNAL_SERVICE_SECRET:  str(),
+  LOG_LEVEL:                str({ default: 'info' }),
+});

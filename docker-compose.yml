@@ -1,0 +1,254 @@
+services:
+
+  # ── API Gateway ────────────────────────────────────────────────────────────
+  gateway:
+    build:
+      context: ./services/gateway
+      target: dev
+    container_name: afrihealth-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      AUTH_SERVICE_URL: http://auth-service:3001
+      PATIENT_SERVICE_URL: http://patient-service:3002
+      RECORDS_SERVICE_URL: http://records-service:3003
+      PROVIDER_SERVICE_URL: http://provider-service:3004
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-afrihealth-dev-jwt-secret-change-in-production}
+      LOG_LEVEL: debug
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - afrihealth-network
+    restart: unless-stopped
+    volumes:
+      - ./services/gateway/src:/app/src
+
+  # ── Auth Service ───────────────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./services/auth-service
+      target: dev
+    container_name: afrihealth-auth
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DATABASE_URL: postgresql://postgres:afrihealth_pass@auth-db:5432/auth_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-afrihealth-dev-jwt-secret-change-in-production}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_DAYS: 30
+      LOG_LEVEL: debug
+      SERVICE_NAME: auth-service
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-change-in-production}
+    depends_on:
+      auth-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - afrihealth-network
+    restart: unless-stopped
+    volumes:
+      - ./services/auth-service/src:/app/src
+
+  # ── Patient Service ────────────────────────────────────────────────────────
+  patient-service:
+    build:
+      context: ./services/patient-service
+      target: dev
+    container_name: afrihealth-patient
+    ports:
+      - "3002:3002"
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      SERVICE_NAME: patient-service
+      DATABASE_URL: postgresql://postgres:afrihealth_pass@patient-db:5432/patient_db
+      JWT_SECRET: ${JWT_SECRET:-afrihealth-dev-jwt-secret-change-in-production}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-change-in-production}
+      LOG_LEVEL: debug
+    depends_on:
+      patient-db:
+        condition: service_healthy
+    networks:
+      - afrihealth-network
+    restart: unless-stopped
+    volumes:
+      - ./services/patient-service/src:/app/src
+
+  # ── Records Service ────────────────────────────────────────────────────────
+  records-service:
+    build:
+      context: ./services/records-service
+      target: dev
+    container_name: afrihealth-records
+    ports:
+      - "3003:3003"
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      SERVICE_NAME: records-service
+      DATABASE_URL: postgresql://postgres:afrihealth_pass@records-db:5432/records_db
+      JWT_SECRET: ${JWT_SECRET:-afrihealth-dev-jwt-secret-change-in-production}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-change-in-production}
+      LOG_LEVEL: debug
+    depends_on:
+      records-db:
+        condition: service_healthy
+    networks:
+      - afrihealth-network
+    restart: unless-stopped
+    volumes:
+      - ./services/records-service/src:/app/src
+
+  # ── Provider Service ───────────────────────────────────────────────────────
+  provider-service:
+    build:
+      context: ./services/provider-service
+      target: dev
+    container_name: afrihealth-provider
+    ports:
+      - "3004:3004"
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      SERVICE_NAME: provider-service
+      DATABASE_URL: postgresql://postgres:afrihealth_pass@provider-db:5432/provider_db
+      JWT_SECRET: ${JWT_SECRET:-afrihealth-dev-jwt-secret-change-in-production}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-change-in-production}
+      LOG_LEVEL: debug
+    depends_on:
+      provider-db:
+        condition: service_healthy
+    networks:
+      - afrihealth-network
+    restart: unless-stopped
+    volumes:
+      - ./services/provider-service/src:/app/src
+
+  # ── Auth PostgreSQL Database ───────────────────────────────────────────────
+  auth-db:
+    image: postgres:15
+    container_name: afrihealth-auth-db
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: afrihealth_pass
+    ports:
+      - "5433:5432"
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+    networks:
+      - afrihealth-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Patient PostgreSQL Database ────────────────────────────────────────────
+  patient-db:
+    image: postgres:15
+    container_name: afrihealth-patient-db
+    environment:
+      POSTGRES_DB: patient_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: afrihealth_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - patient_data:/var/lib/postgresql/data
+    networks:
+      - afrihealth-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d patient_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Records PostgreSQL Database ────────────────────────────────────────────
+  records-db:
+    image: postgres:15
+    container_name: afrihealth-records-db
+    environment:
+      POSTGRES_DB: records_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: afrihealth_pass
+    ports:
+      - "5435:5432"
+    volumes:
+      - records_data:/var/lib/postgresql/data
+    networks:
+      - afrihealth-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d records_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Provider PostgreSQL Database ───────────────────────────────────────────
+  provider-db:
+    image: postgres:15
+    container_name: afrihealth-provider-db
+    environment:
+      POSTGRES_DB: provider_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: afrihealth_pass
+    ports:
+      - "5436:5432"
+    volumes:
+      - provider_data:/var/lib/postgresql/data
+    networks:
+      - afrihealth-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d provider_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Redis ──────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: afrihealth-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - afrihealth-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  afrihealth-network:
+    driver: bridge
+    name: afrihealth-network
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  auth_data:
+    name: afrihealth-auth-data
+  patient_data:
+    name: afrihealth-patient-data
+  records_data:
+    name: afrihealth-records-data
+  provider_data:
+    name: afrihealth-provider-data
+  redis_data:
+    name: afrihealth-redis-data

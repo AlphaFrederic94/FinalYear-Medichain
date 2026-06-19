@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  NURSE
+  PHARMACIST
+  LAB_TECHNICIAN
+  FACILITY_ADMIN
+  MINISTRY_ADMIN
+  SUPER_ADMIN
+}
+
+model User {
+  id           String         @id @default(uuid())
+  did          String         @unique
+  email        String         @unique
+  phone        String?        @unique
+  password     String
+  firstName    String
+  lastName     String
+  role         Role           @default(PATIENT)
+  countryCode  String         @default("CMR")
+  licenseNo    String?        @unique
+  specialty    String?
+  facilityId   String?
+  isActive     Boolean        @default(true)
+  isVerified   Boolean        @default(true)
+  loginHistory LoginHistory[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  deletedAt    DateTime?
+
+  @@map("users")
+}
+
+model LoginHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  ipAddress String?
+  userAgent String?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@map("login_history")
+}
