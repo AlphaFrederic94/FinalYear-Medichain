@@ -14,7 +14,8 @@ const { jwtVerify } = require('./middleware/jwtVerify');
 const swaggerUi = require('swagger-ui-express');
 
 const app = express();
-const redis = new Redis(env.REDIS_URL);
+const useRedis = env.REDIS_URL && !/localhost|127\.0\.0\.1/.test(env.REDIS_URL);
+const redis = useRedis ? new Redis(env.REDIS_URL) : null;
 
 const logger = winston.createLogger({
   level: env.LOG_LEVEL,
@@ -29,7 +30,7 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: 'Too many requests', code: 'RATE_LIMIT_EXCEEDED' },
-  store: new RedisStore({ sendCommand: (...args) => redis.call(...args) }),
+  ...(useRedis ? { store: new RedisStore({ sendCommand: (...args) => redis.call(...args) }) } : {}),
 });
 
 app.use(helmet());
