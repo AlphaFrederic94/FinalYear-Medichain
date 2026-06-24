@@ -14,6 +14,7 @@ const { errorHandler } = require('./middleware/errorHandler');
 const { rateLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
+app.set('trust proxy', true);
 const prisma = new PrismaClient();
 
 app.use(helmet());

@@ -47,6 +47,7 @@ const swaggerOptions = {
       { url: '/api/v1/patients/api-docs-json', name: 'Patient Service' },
       { url: '/api/v1/records/api-docs-json', name: 'Records Service' },
       { url: '/api/v1/providers/api-docs-json', name: 'Provider Service' },
+      { url: '/api/v1/blockchain/api-docs-json', name: 'Blockchain Service' },
     ],
   },
 };
@@ -79,6 +80,11 @@ app.use('/api/v1/records', proxy(env.RECORDS_SERVICE_URL, {
 app.use('/api/v1/providers', proxy(env.PROVIDER_SERVICE_URL, {
   ...proxyOptions(env.PROVIDER_SERVICE_URL),
   proxyReqPathResolver: (req) => `/providers${req.path}`,
+}));
+
+app.use('/api/v1/blockchain', proxy(env.BLOCKCHAIN_SERVICE_URL, {
+  ...proxyOptions(env.BLOCKCHAIN_SERVICE_URL),
+  proxyReqPathResolver: (req) => `/blockchain${req.path}`,
 }));
 
 app.get('/health', (req, res) => {

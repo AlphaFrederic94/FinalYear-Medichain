@@ -1,11 +1,10 @@
 const { cleanEnv, str, port } = require('envalid');
 module.exports = cleanEnv(process.env, {
   NODE_ENV:                str({ choices: ['development', 'test', 'production'], default: 'development' }),
-  PORT:                    port({ default: 3003 }),
-  SERVICE_NAME:            str({ default: 'records-service' }),
+  PORT:                    port({ default: 3005 }),
+  SERVICE_NAME:            str({ default: 'blockchain-service' }),
   DATABASE_URL:            str(),
   JWT_SECRET:              str(),
   INTERNAL_SERVICE_SECRET: str(),
-  BLOCKCHAIN_SERVICE_URL:  str({ default: 'http://blockchain-service:3005' }),
   LOG_LEVEL:               str({ default: 'info' }),
 });

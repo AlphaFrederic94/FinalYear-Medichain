@@ -326,24 +326,6 @@ router.get('/documents/:did', authenticate, consentCheck, ctrl.getPatientDocumen
  * /records/provider/{did}:
  *   get:
  *     tags: [Encounters]
- *     summary: Get all records created by a specific provider
- *     security: [{ bearerAuth: [] }]
- *     parameters:
- *       - in: path
- *         name: did
- *         required: true
- *         schema: { type: string }
- *     responses:
- *       200: { description: Success }
- */
-router.get('/provider/:did', authenticate, authorize(...PROVIDERS), ctrl.getProviderRecords);
-
-// ── Provider records ──────────────────────────────────────────────────────────
-/**
- * @openapi
- * /records/provider/{did}:
- *   get:
- *     tags: [Encounters]
  *     summary: Get all records created by a provider (encounters, diagnoses, prescriptions)
  *     security: [{ bearerAuth: [] }]
  *     parameters:

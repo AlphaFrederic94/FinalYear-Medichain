@@ -1,0 +1,20 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Block {
+  id           String   @id @default(uuid())
+  index        Int      @unique
+  timestamp    DateTime @default(now())
+  previousHash String
+  hash         String   @unique
+  data         Json
+  nonce        Int      @default(0)
+
+  @@map("blockchain_blocks")
+}

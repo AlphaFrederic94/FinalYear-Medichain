@@ -1,9 +1,17 @@
 const repo = require('../repositories/records.repository');
 const { AppError } = require('../middleware/errorHandler');
+const blockchainClient = require('../utils/blockchainClient');
 
 // ── Encounters ────────────────────────────────────────────────────────────────
-const createEncounter = (providerDid, data) =>
-  repo.createEncounter({ ...data, providerDid });
+const createEncounter = async (token, providerDid, data) => {
+  const encounter = await repo.createEncounter({ ...data, providerDid });
+  blockchainClient.anchorRecord(token, encounter.patientDid, encounter.id, 'ENCOUNTER', encounter)
+    .then(async ({ txId, recordHash }) => {
+      await repo.updateEncounterBlockchain(encounter.id, txId, recordHash).catch(() => {});
+    })
+    .catch((err) => console.error('Encounter anchoring failed:', err.message));
+  return encounter;
+};
 
 const getEncounter = async (id) => {
   const e = await repo.findEncounterById(id);
@@ -14,14 +22,28 @@ const getEncounter = async (id) => {
 const getPatientRecords = (patientDid) => repo.listEncountersByPatient(patientDid);
 
 // ── Diagnoses ─────────────────────────────────────────────────────────────────
-const addDiagnosis = (providerDid, data) =>
-  repo.createDiagnosis({ ...data, diagnosedBy: providerDid });
+const addDiagnosis = async (token, providerDid, data) => {
+  const diagnosis = await repo.createDiagnosis({ ...data, diagnosedBy: providerDid });
+  blockchainClient.anchorRecord(token, diagnosis.patientDid, diagnosis.id, 'DIAGNOSIS', diagnosis)
+    .then(async ({ txId, recordHash }) => {
+      await repo.updateDiagnosisBlockchain(diagnosis.id, txId, recordHash).catch(() => {});
+    })
+    .catch((err) => console.error('Diagnosis anchoring failed:', err.message));
+  return diagnosis;
+};
 
 const getPatientDiagnoses = (patientDid) => repo.listDiagnosesByPatient(patientDid);
 
 // ── Prescriptions ─────────────────────────────────────────────────────────────
-const createPrescription = (providerDid, data) =>
-  repo.createPrescription({ ...data, prescribedBy: providerDid });
+const createPrescription = async (token, providerDid, data) => {
+  const rx = await repo.createPrescription({ ...data, prescribedBy: providerDid });
+  blockchainClient.anchorRecord(token, rx.patientDid, rx.id, 'PRESCRIPTION', rx)
+    .then(async ({ txId, recordHash }) => {
+      await repo.updatePrescriptionBlockchain(rx.id, txId, recordHash).catch(() => {});
+    })
+    .catch((err) => console.error('Prescription anchoring failed:', err.message));
+  return rx;
+};
 
 const getPatientPrescriptions = (patientDid) => repo.listPrescriptionsByPatient(patientDid);
 
@@ -30,14 +52,20 @@ const dispensePrescription = async (id, providerDid) => {
 };
 
 // ── Vitals ────────────────────────────────────────────────────────────────────
-const recordVitals = (providerDid, data) => {
+const recordVitals = async (token, providerDid, data) => {
   // Compute BMI if height and weight are provided
   let bmi = undefined;
   if (data.heightCm && data.weightKg) {
     const hm = data.heightCm / 100;
     bmi = parseFloat((data.weightKg / (hm * hm)).toFixed(2));
   }
-  return repo.createVitals({ ...data, bmi, recordedBy: providerDid });
+  const vitals = await repo.createVitals({ ...data, bmi, recordedBy: providerDid });
+  blockchainClient.anchorRecord(token, vitals.patientDid, vitals.id, 'VITALS', vitals)
+    .then(async ({ txId, recordHash }) => {
+      await repo.updateVitalsBlockchain(vitals.id, txId, recordHash).catch(() => {});
+    })
+    .catch((err) => console.error('Vitals anchoring failed:', err.message));
+  return vitals;
 };
 
 const getLatestVitals = (patientDid) => repo.latestVitals(patientDid);
@@ -69,13 +97,17 @@ const getSummary = async (patientDid) => {
 };
 
 // ── Documents ─────────────────────────────────────────────────────────────────
-const uploadDocument = (uploaderDid, data) =>
-  repo.createDocument({ ...data, uploadedBy: uploaderDid });
+const uploadDocument = async (token, uploaderDid, data) => {
+  const doc = await repo.createDocument({ ...data, uploadedBy: uploaderDid });
+  blockchainClient.anchorRecord(token, doc.patientDid, doc.id, 'DOCUMENT', doc)
+    .then(async ({ txId, recordHash }) => {
+      await repo.updateDocumentBlockchain(doc.id, txId, recordHash).catch(() => {});
+    })
+    .catch((err) => console.error('Document anchoring failed:', err.message));
+  return doc;
+};
 
 const getPatientDocuments = (patientDid) => repo.listDocumentsByPatient(patientDid);
-
-// ── Provider records ──────────────────────────────────────────────────────────
-const getProviderRecordsAlias = (providerDid) => repo.getProviderRecords(providerDid);
 
 // ── Provider records ──────────────────────────────────────────────────────────
 const getProviderRecords = (providerDid) => repo.getProviderRecords(providerDid);

@@ -46,6 +46,8 @@ model Encounter {
   prescriptions  Prescription[]
   vitals         Vitals[]
   documents      Document[]
+  blockchainTxId String?
+  recordHash     String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -55,16 +57,18 @@ model Encounter {
 }
 
 model Diagnosis {
-  id          String          @id @default(uuid())
-  encounter   Encounter       @relation(fields: [encounterId], references: [id], onDelete: Cascade)
-  encounterId String
-  patientDid  String
-  icd10Code   String?
-  description String
-  status      DiagnosisStatus @default(ACTIVE)
-  severity    String?
-  diagnosedBy String
-  createdAt   DateTime        @default(now())
+  id             String          @id @default(uuid())
+  encounter      Encounter       @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  encounterId    String
+  patientDid     String
+  icd10Code      String?
+  description    String
+  status         DiagnosisStatus @default(ACTIVE)
+  severity       String?
+  diagnosedBy    String
+  blockchainTxId String?
+  recordHash     String?
+  createdAt      DateTime        @default(now())
 
   @@index([patientDid])
   @@map("diagnoses")
@@ -85,6 +89,8 @@ model Prescription {
   dispensedAt    DateTime?
   dispensedBy    String?
   prescribedBy   String
+  blockchainTxId String?
+  recordHash     String?
   createdAt      DateTime  @default(now())
 
   @@index([patientDid])
@@ -107,24 +113,40 @@ model Vitals {
   oxygenSat       Float?
   bloodGlucose    Float?
   recordedBy      String
+  blockchainTxId  String?
+  recordHash      String?
 
   @@index([patientDid])
   @@map("vitals")
 }
 
 model Document {
-  id           String       @id @default(uuid())
-  encounter    Encounter    @relation(fields: [encounterId], references: [id], onDelete: Cascade)
-  encounterId  String
-  patientDid   String
-  documentType DocumentType @default(OTHER)
-  fileName     String
-  fileSize     Int?
-  mimeType     String?
-  storagePath  String
-  uploadedBy   String
-  uploadedAt   DateTime     @default(now())
+  id             String       @id @default(uuid())
+  encounter      Encounter    @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  encounterId    String
+  patientDid     String
+  documentType   DocumentType @default(OTHER)
+  fileName       String
+  fileSize       Int?
+  mimeType       String?
+  storagePath    String
+  uploadedBy     String
+  uploadedAt     DateTime     @default(now())
+  blockchainTxId String?
+  recordHash     String?
 
   @@index([patientDid])
   @@map("documents")
+}
+
+model Block {
+  id           String   @id @default(uuid())
+  index        Int      @unique
+  timestamp    DateTime @default(now())
+  previousHash String
+  hash         String   @unique
+  data         Json
+  nonce        Int      @default(0)
+
+  @@map("blockchain_blocks")
 }

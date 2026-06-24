@@ -139,6 +139,21 @@ const getAnalytics = async () => {
   };
 };
 
+const updateEncounterBlockchain = (id, blockchainTxId, recordHash) =>
+  prisma.encounter.update({ where: { id }, data: { blockchainTxId, recordHash } });
+
+const updateDiagnosisBlockchain = (id, blockchainTxId, recordHash) =>
+  prisma.diagnosis.update({ where: { id }, data: { blockchainTxId, recordHash } });
+
+const updatePrescriptionBlockchain = (id, blockchainTxId, recordHash) =>
+  prisma.prescription.update({ where: { id }, data: { blockchainTxId, recordHash } });
+
+const updateVitalsBlockchain = (id, blockchainTxId, recordHash) =>
+  prisma.vitals.update({ where: { id }, data: { blockchainTxId, recordHash } });
+
+const updateDocumentBlockchain = (id, blockchainTxId, recordHash) =>
+  prisma.document.update({ where: { id }, data: { blockchainTxId, recordHash } });
+
 module.exports = {
   createEncounter, findEncounterById, listEncountersByPatient,
   createDiagnosis, listDiagnosesByPatient,
@@ -147,4 +162,9 @@ module.exports = {
   createDocument, listDocumentsByPatient,
   getProviderRecords,
   getAnalytics,
+  updateEncounterBlockchain,
+  updateDiagnosisBlockchain,
+  updatePrescriptionBlockchain,
+  updateVitalsBlockchain,
+  updateDocumentBlockchain,
 };

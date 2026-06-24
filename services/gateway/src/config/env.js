@@ -8,6 +8,7 @@ module.exports = cleanEnv(process.env, {
   PATIENT_SERVICE_URL: str({ default: 'http://localhost:3002' }),
   RECORDS_SERVICE_URL: str({ default: 'http://localhost:3003' }),
   PROVIDER_SERVICE_URL: str({ default: 'http://localhost:3004' }),
+  BLOCKCHAIN_SERVICE_URL: str({ default: 'http://localhost:3005' }),
   REDIS_URL: str({ default: 'redis://localhost:6379' }),
   JWT_SECRET: str(),
   LOG_LEVEL: str({ default: 'info' }),

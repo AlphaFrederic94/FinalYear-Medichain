@@ -15,6 +15,7 @@ services:
       PATIENT_SERVICE_URL: http://patient-service:3002
       RECORDS_SERVICE_URL: http://records-service:3003
       PROVIDER_SERVICE_URL: http://provider-service:3004
+      BLOCKCHAIN_SERVICE_URL: http://blockchain-service:3005
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-afrihealth-dev-jwt-secret-change-in-production}
       LOG_LEVEL: debug
@@ -97,6 +98,7 @@ services:
       DATABASE_URL: postgresql://postgres:afrihealth_pass@records-db:5432/records_db
       JWT_SECRET: ${JWT_SECRET:-afrihealth-dev-jwt-secret-change-in-production}
       INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-change-in-production}
+      BLOCKCHAIN_SERVICE_URL: http://blockchain-service:3005
       LOG_LEVEL: debug
     depends_on:
       records-db:
@@ -131,6 +133,31 @@ services:
     restart: unless-stopped
     volumes:
       - ./services/provider-service/src:/app/src
+
+  # ── Blockchain Service ─────────────────────────────────────────────────────
+  blockchain-service:
+    build:
+      context: ./services/blockchain-service
+      target: dev
+    container_name: afrihealth-blockchain
+    ports:
+      - "3005:3005"
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      SERVICE_NAME: blockchain-service
+      DATABASE_URL: postgresql://postgres:afrihealth_pass@blockchain-db:5432/blockchain_db
+      JWT_SECRET: ${JWT_SECRET:-afrihealth-dev-jwt-secret-change-in-production}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET:-internal-secret-change-in-production}
+      LOG_LEVEL: debug
+    depends_on:
+      blockchain-db:
+        condition: service_healthy
+    networks:
+      - afrihealth-network
+    restart: unless-stopped
+    volumes:
+      - ./services/blockchain-service/src:/app/src
 
   # ── Auth PostgreSQL Database ───────────────────────────────────────────────
   auth-db:
@@ -216,6 +243,27 @@ services:
       retries: 5
     restart: unless-stopped
 
+  # ── Blockchain PostgreSQL Database ─────────────────────────────────────────
+  blockchain-db:
+    image: postgres:15
+    container_name: afrihealth-blockchain-db
+    environment:
+      POSTGRES_DB: blockchain_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: afrihealth_pass
+    ports:
+      - "5437:5432"
+    volumes:
+      - blockchain_data:/var/lib/postgresql/data
+    networks:
+      - afrihealth-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d blockchain_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
   # ── Redis ──────────────────────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
@@ -250,5 +298,7 @@ volumes:
     name: afrihealth-records-data
   provider_data:
     name: afrihealth-provider-data
+  blockchain_data:
+    name: afrihealth-blockchain-data
   redis_data:
     name: afrihealth-redis-data

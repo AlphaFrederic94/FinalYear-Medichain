@@ -151,26 +151,12 @@ router.post('/me/emergency-contacts', authenticate, authorize('PATIENT'), valida
  *       200: { description: Deleted }
  */
 router.delete('/me/emergency-contacts/:id', authenticate, authorize('PATIENT'), ctrl.deleteContact);
-router.get('/analytics', authenticate, authorize('MINISTRY_ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN'), ctrl.getAnalytics);
+
+// ── Analytics ─────────────────────────────────────────────────────────────────
+const ADMIN_ROLES = ['MINISTRY_ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN'];
+router.get('/analytics', authenticate, authorize(...ADMIN_ROLES), ctrl.getAnalytics);
 
 // ── Provider access ───────────────────────────────────────────────────────────
-/**
- * @openapi
- * /patients/{did}:
- *   get:
- *     tags: [Patients - Provider Access]
- *     summary: Get a patient profile by DID (Provider only)
- *     parameters:
- *       - in: path
- *         name: did
- *         required: true
- *         schema: { type: string }
- *     security: [{ bearerAuth: [] }]
- *     responses:
- *       200: { description: Success }
- */
-router.get('/:did',   authenticate, authorize(...PROVIDER_ROLES), ctrl.getByDid);
-
 /**
  * @openapi
  * /patients/search:
@@ -191,18 +177,21 @@ router.get('/:did',   authenticate, authorize(...PROVIDER_ROLES), ctrl.getByDid)
  */
 router.post('/search', authenticate, authorize(...PROVIDER_ROLES), validate(searchSchema), ctrl.search);
 
-// ── Analytics ─────────────────────────────────────────────────────────────────
-const ADMIN_ROLES = ['MINISTRY_ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN'];
 /**
  * @openapi
- * /patients/analytics:
+ * /patients/{did}:
  *   get:
- *     tags: [Analytics]
- *     summary: Get patient registration analytics (Admin only)
+ *     tags: [Patients - Provider Access]
+ *     summary: Get a patient profile by DID (Provider only)
+ *     parameters:
+ *       - in: path
+ *         name: did
+ *         required: true
+ *         schema: { type: string }
  *     security: [{ bearerAuth: [] }]
  *     responses:
  *       200: { description: Success }
  */
-router.get('/analytics', authenticate, authorize(...ADMIN_ROLES), ctrl.getAnalytics);
+router.get('/:did',   authenticate, authorize(...PROVIDER_ROLES), ctrl.getByDid);
 
 module.exports = router;
