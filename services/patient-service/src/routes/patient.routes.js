@@ -193,5 +193,6 @@ router.post('/search', authenticate, authorize(...PROVIDER_ROLES), validate(sear
  *       200: { description: Success }
  */
 router.get('/:did',   authenticate, authorize(...PROVIDER_ROLES), ctrl.getByDid);
+router.put('/:did',   authenticate, authorize(...PROVIDER_ROLES), validate(updateProfileSchema), ctrl.updatePatientByDid);
 
 module.exports = router;

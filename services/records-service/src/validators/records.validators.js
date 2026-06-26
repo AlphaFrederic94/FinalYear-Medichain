@@ -2,7 +2,7 @@ const { z } = require('zod');
 
 const encounterSchema = z.object({
   patientDid:    z.string().min(1),
-  facilityId:    z.string().uuid().optional(),
+  facilityId:    z.string().optional(),
   encounterType: z.enum(['OUTPATIENT', 'INPATIENT', 'EMERGENCY', 'TELEHEALTH', 'FOLLOW_UP']).default('OUTPATIENT'),
   chiefComplaint:z.string().max(500).optional(),
   notes:         z.string().optional(),

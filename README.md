@@ -1,141 +1,137 @@
-# Medichain Backend
+# AfriHealth Chain EHR Backend
 
-Medichain Backend is a microservice-based electronic health record platform. It separates identity, patient profiles, provider administration, and clinical record management into independent services behind a single API gateway.
+AfriHealth Chain EHR Backend is a highly secure, microservice-based electronic health record (EHR) platform. It separates identity management, patient profiles, provider administration, clinical records, and on-chain blockchain audits into independent microservices behind a unified API gateway.
 
-## Architecture
+---
 
-The backend is organized around five services:
+## 🏗️ Architecture
 
-- `gateway`: public entry point for all API traffic
-- `auth-service`: registration, login, token issuance, token refresh, and password management
-- `patient-service`: patient profiles, allergies, emergency contacts, and patient analytics
-- `provider-service`: facilities, staff profiles, specialties, and provider analytics
-- `records-service`: encounters, diagnoses, prescriptions, vitals, documents, timelines, and records analytics
+The backend is composed of five specialized Node.js microservices and supporting infrastructure:
 
-Supporting infrastructure:
+*   **`gateway`** (Port `3000`): The public entry point. Handles request routing, rate limiting, and JWT validation.
+*   **`auth-service`** (Port `3001`): Manages identity registration, authentication, token issuance/refresh, password policies, and Decentralized Identifier (DID) registration.
+*   **`patient-service`** (Port `3002`): Manages patient demographic profiles, allergies, emergency contacts, and provider-led patient profile updates.
+*   **`records-service`** (Port `3003`): The clinical core. Manages encounters, clinical findings, diagnoses, prescriptions, vitals, and file uploads. Enforces blockchain-based consent verification.
+*   **`provider-service`** (Port `3004`): Manages medical facility registration, clinical staff profiles, specialties, and provider onboarding verification.
+*   **`blockchain-service`** (Port `3005`): Simulates and coordinates on-chain operations (anchoring records, issuing consent tokens, revoking consent, checking permission scopes, and auditing read logs).
 
-- PostgreSQL database per service
-- Redis for refresh-token storage and gateway rate limiting
-- Swagger UI on each service for local API inspection
+### Infrastructure Components
+*   **PostgreSQL**: Independent databases are provisioned for each microservice to maintain strict schema isolation:
+    *   `auth_db`
+    *   `patient_db`
+    *   `provider_db`
+    *   `records_db`
+    *   `blockchain_db`
+*   **Redis**: Used for API Gateway rate-limiting and active session/refresh-token caching.
 
-The gateway proxies requests from `/api/v1/*` to the individual services and validates JWTs before forwarding protected traffic. Each service owns its own database and business logic through Prisma, so responsibilities stay isolated and data models do not bleed across domains.
+---
 
-## Request Flow
+## 🚀 Docker Setup & Installation
 
-1. A client sends a request to the gateway.
-2. The gateway checks the JWT and attaches the user identity to the request context.
-3. The gateway forwards the request to the target service.
-4. The service validates input with Zod, applies authorization rules, and reads or writes through Prisma.
-5. The service returns a wrapped JSON response in the form `{ success, data }`.
+### Prerequisites
+*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (ensure it is running)
+*   Node.js (for optional local script execution)
 
-## Identity and Roles
+### Step-by-Step Deployment
 
-Authentication is handled by `auth-service`.
+1.  **Clone & Navigate to Backend Root**
+    ```bash
+    cd "erh-micro-backend"
+    ```
 
-- Patients register and receive a DID plus access and refresh tokens.
-- Healthcare staff register with provider roles such as `DOCTOR`, `NURSE`, `PHARMACIST`, or `FACILITY_ADMIN`.
-- Administrative roles include `MINISTRY_ADMIN` and `SUPER_ADMIN`.
+2.  **Environment Variables Configuration**
+    Confirm that the `.env` file exists at the root of the backend directory. If not, copy it from `.env.example`:
+    ```bash
+    cp .env.example .env
+    ```
 
-The frontend maps backend roles into three UI categories:
+3.  **Start all Services**
+    Build and launch all services in the background using Docker Compose:
+    ```bash
+    docker compose up --build -d
+    ```
+    This launches all databases, Redis, the API Gateway, and the five backend microservices.
 
-- patient
-- doctor
-- admin
+4.  **Verify Running Containers**
+    Ensure all containers are running and healthy:
+    ```bash
+    docker ps
+    ```
+    You should see `afrihealth-gateway`, `afrihealth-auth`, `afrihealth-patient`, `afrihealth-records`, `afrihealth-provider`, `afrihealth-blockchain`, along with the five PostgreSQL DB containers and the Redis container.
 
-## Patient Service
+---
 
-The patient service stores the patient profile and related personal data.
+## 🗄️ Database Migrations & Seeding
 
-Main responsibilities:
+Since databases are run in isolated containers, you must deploy Prisma migrations and seed the initial dataset (clinicians, test patients, facilities, and mock encounters) before starting.
 
-- return the signed-in patient profile
-- update patient profile details
-- manage allergies
-- manage emergency contacts
-- support provider search by DID, name, or phone
-- expose patient analytics for admin views
+We have included automated helper scripts at the root of `erh-micro-backend/` to run these commands sequentially across all containers:
 
-## Provider Service
+*   **On Windows (Command Prompt / PowerShell)**:
+    ```cmd
+    .\migrate-and-seed.bat
+    ```
+*   **On macOS / Linux / Git Bash**:
+    ```bash
+    chmod +x migrate-and-seed.sh
+    ./migrate-and-seed.sh
+    ```
 
-The provider service manages care delivery organizations and staff records.
+### Manual Migration & Seeding (Alternative)
+If you prefer to run commands manually, run the following Docker Exec operations in your terminal:
 
-Main responsibilities:
+```bash
+# 1. Run database migrations
+docker exec -it afrihealth-auth npx prisma migrate deploy
+docker exec -it afrihealth-patient npx prisma migrate deploy
+docker exec -it afrihealth-provider npx prisma migrate deploy
+docker exec -it afrihealth-records npx prisma migrate deploy
+docker exec -it afrihealth-blockchain npx prisma migrate deploy
 
-- register and list facilities
-- create and edit staff records
-- return the signed-in provider profile
-- list specialties
-- expose provider and facility analytics
+# 2. Seed initial data
+docker exec -it afrihealth-auth npx prisma db seed
+docker exec -it afrihealth-patient npx prisma db seed
+docker exec -it afrihealth-provider npx prisma db seed
+docker exec -it afrihealth-records npx prisma db seed
+docker exec -it afrihealth-blockchain npx prisma db seed
+```
 
-## Records Service
+---
 
-The records service is the clinical core of the system.
+## 📊 Monitoring Logs & The Blockchain Audit Trail
 
-Main responsibilities:
+To monitor backend performance, trace request pathways, and verify on-chain transaction anchors, you can view container logs in real time.
 
-- create and read encounters
-- add diagnoses
-- issue and dispense prescriptions
-- record vitals
-- store medical document references
-- build patient timelines and summaries
-- aggregate provider and system analytics
+### ⛓️ Tracking Blockchain Service Logs
+The `blockchain-service` is responsible for anchoring clinical records, creating consent tokens, and keeping access audit logs. Stream its logs with:
+```bash
+docker logs -f afrihealth-blockchain
+```
+*   Look for outputs like:
+    *   `Blockchain client POST error` or success logs for anchoring/verifying hashes.
+    *   `Grant consent: patient did:... -> provider did:...`
+    *   `Check consent status...`
 
-Clinical reads are protected by JWT authentication and the records authorization middleware. Patients can access their own records, while provider roles can access clinical resources according to the current authorization rules.
+### 🩺 Monitoring Clinical Records & Consent Checks
+The `records-service` performs on-chain checks through the blockchain service whenever a provider attempts to read or write a record. Stream its logs with:
+```bash
+docker logs -f afrihealth-records
+```
 
-## Data Storage
+### 🌐 Viewing Gateway/All Service Logs
+To view logs across all microservices simultaneously:
+```bash
+docker compose logs -f
+```
+To view logs for a specific service (e.g. Gateway):
+```bash
+docker logs -f afrihealth-gateway
+```
 
-Each service uses its own Prisma schema and database:
+---
 
-- `auth_db`
-- `patient_db`
-- `provider_db`
-- `records_db`
+## 🔒 On-Chain Consent & Access Model
 
-This keeps the service boundaries explicit and makes local development and deployment easier to reason about.
-
-## Local Development
-
-The repository includes `docker-compose.yml` for local development.
-
-Common service ports:
-
-- gateway: `3000`
-- auth-service: `3001`
-- patient-service: `3002`
-- records-service: `3003`
-- provider-service: `3004`
-- Redis: `6379`
-
-Each service exposes:
-
-- `/health`
-- Swagger UI under `/api-docs`
-- a service-specific JSON spec endpoint
-
-## Environment Variables
-
-Important variables include:
-
-- `JWT_SECRET`
-- `INTERNAL_SERVICE_SECRET`
-- `REDIS_URL`
-- `DATABASE_URL`
-- `AUTH_SERVICE_URL`
-- `PATIENT_SERVICE_URL`
-- `RECORDS_SERVICE_URL`
-- `PROVIDER_SERVICE_URL`
-
-The root `.env.example` contains the shared secrets used by the docker compose setup.
-
-## API Surface
-
-The frontend talks to the gateway using these base paths:
-
-- `/api/v1/auth`
-- `/api/v1/patients`
-- `/api/v1/providers`
-- `/api/v1/records`
-
-The gateway rewrites those paths to the underlying service routes.
-
+1.  **Patient Control**: Patients grant explicitly scoped consent policies (`RECORDS`, `PRESCRIPTIONS`, `DOCUMENTS`, `VITALS`) to a doctor's DID with a time expiration (e.g., 2 hours, 24 hours). This transaction is signed and registered on the simulated blockchain ledger.
+2.  **On-Chain Verification**: When a provider requests patient data, the `records-service` intercepts the request, runs the `consentCheck` middleware, and queries `blockchain-service` on-chain status.
+3.  **Immutable Audit Logs**: Every clinical access event is permanently logged as a block audit trail on the ledger, verifiable via `GET /blockchain/audit/:patientDid`.

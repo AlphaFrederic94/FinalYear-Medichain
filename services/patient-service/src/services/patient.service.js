@@ -68,6 +68,11 @@ const getSummary = async (userDid) => {
 
 const getAnalytics = () => repo.getAnalytics();
 
+const updatePatientByDid = async (targetDid, data) => {
+  await getOrCreate(targetDid);
+  return repo.upsert(targetDid, data);
+};
+
 module.exports = {
   getMyProfile,
   updateMyProfile,
@@ -80,4 +85,5 @@ module.exports = {
   deleteEmergencyContact,
   getSummary,
   getAnalytics,
+  updatePatientByDid,
 };

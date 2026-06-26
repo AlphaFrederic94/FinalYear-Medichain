@@ -24,10 +24,12 @@ const deleteContact       = async (req, res, next) => {
 };
 
 const getAnalytics = wrap(() => svc.getAnalytics());
+const updatePatientByDid = wrap((req) => svc.updatePatientByDid(req.params.did, req.body));
 
 module.exports = {
   getMe, updateMe, getByDid, search, getSummary,
   updateAllergies, listAllergies,
   listContacts, addContact, deleteContact,
   getAnalytics,
+  updatePatientByDid,
 };

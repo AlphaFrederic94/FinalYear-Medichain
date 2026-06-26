@@ -20,7 +20,7 @@ const registerProviderSchema = z.object({
   role: z.enum(['DOCTOR', 'NURSE', 'PHARMACIST', 'LAB_TECHNICIAN', 'FACILITY_ADMIN']),
   licenseNo: z.string().optional(),
   specialty: z.string().optional(),
-  facilityId: z.string().uuid().optional(),
+  facilityId: z.string().optional(),
   countryCode: z.string().length(3).default('CMR'),
 });
 

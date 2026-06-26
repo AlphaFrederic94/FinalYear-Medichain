@@ -19,7 +19,7 @@ const staffSchema = z.object({
   role:       z.enum(['DOCTOR', 'NURSE', 'PHARMACIST', 'LAB_TECHNICIAN', 'FACILITY_ADMIN']),
   specialty:  z.string().max(100).optional(),
   licenseNo:  z.string().max(100).optional(),
-  facilityId: z.string().uuid().optional(),
+  facilityId: z.string().optional(),
   bio:        z.string().max(1000).optional(),
   phone:      z.string().max(20).optional(),
 });
