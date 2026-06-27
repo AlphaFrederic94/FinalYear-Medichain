@@ -122,8 +122,8 @@ model Vitals {
 
 model Document {
   id             String       @id @default(uuid())
-  encounter      Encounter    @relation(fields: [encounterId], references: [id], onDelete: Cascade)
-  encounterId    String
+  encounter      Encounter?   @relation(fields: [encounterId], references: [id], onDelete: SetNull)
+  encounterId    String?
   patientDid     String
   documentType   DocumentType @default(OTHER)
   fileName       String
@@ -150,3 +150,4 @@ model Block {
 
   @@map("blockchain_blocks")
 }
+

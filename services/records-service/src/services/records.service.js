@@ -19,7 +19,16 @@ const getEncounter = async (id) => {
   return e;
 };
 
-const getPatientRecords = (patientDid) => repo.listEncountersByPatient(patientDid);
+const getPatientRecords = async (patientDid) => {
+  const [encounters, diagnoses, prescriptions, vitals, documents] = await Promise.all([
+    repo.listEncountersByPatient(patientDid),
+    repo.listDiagnosesByPatient(patientDid),
+    repo.listPrescriptionsByPatient(patientDid),
+    repo.vitalsHistory(patientDid),
+    repo.listDocumentsByPatient(patientDid),
+  ]);
+  return { encounters, diagnoses, prescriptions, vitals, documents };
+};
 
 // ── Diagnoses ─────────────────────────────────────────────────────────────────
 const addDiagnosis = async (token, providerDid, data) => {
@@ -73,32 +82,39 @@ const getVitalsHistory = (patientDid) => repo.vitalsHistory(patientDid);
 
 // ── Timeline ──────────────────────────────────────────────────────────────────
 const getTimeline = async (patientDid) => {
-  const [encounters, diagnoses, prescriptions, vitals] = await Promise.all([
-    repo.listEncountersByPatient(patientDid),
-    repo.listDiagnosesByPatient(patientDid),
-    repo.listPrescriptionsByPatient(patientDid),
-    repo.vitalsHistory(patientDid),
-  ]);
-  return { patientDid, encounters, diagnoses, prescriptions, vitals };
+  const records = await getPatientRecords(patientDid);
+  return { patientDid, ...records };
 };
 
 // ── Summary ───────────────────────────────────────────────────────────────────
 const getSummary = async (patientDid) => {
-  const [encounters, diagnoses, prescriptions, latestVitalsData] = await Promise.all([
+  const [encounters, diagnoses, prescriptions, latestVitalsData, documents] = await Promise.all([
     repo.listEncountersByPatient(patientDid),
     repo.listDiagnosesByPatient(patientDid),
     repo.listPrescriptionsByPatient(patientDid),
     repo.latestVitals(patientDid),
+    repo.listDocumentsByPatient(patientDid),
   ]);
   const lastVisit = encounters[0]?.encounterDate ?? null;
   const activeConditions = diagnoses.filter((d) => d.status === 'ACTIVE' || d.status === 'CHRONIC').map((d) => d.description);
   const activePrescriptions = prescriptions.filter((p) => !p.dispensed).map((p) => p.drugName);
-  return { patientDid, totalVisits: encounters.length, lastVisit, activeConditions, activePrescriptions, latestVitals: latestVitalsData };
+  return { patientDid, totalVisits: encounters.length, lastVisit, activeConditions, activePrescriptions, documentsCount: documents.length, latestVitals: latestVitalsData };
 };
 
 // ── Documents ─────────────────────────────────────────────────────────────────
-const uploadDocument = async (token, uploaderDid, data) => {
-  const doc = await repo.createDocument({ ...data, uploadedBy: uploaderDid });
+const MAX_DOCUMENT_SIZE = 5 * 1024 * 1024;
+
+const uploadDocument = async (token, uploader, data) => {
+  if (uploader.role === 'PATIENT' && data.patientDid !== uploader.did) {
+    throw new AppError('Patients can only upload documents to their own record', 403, 'FORBIDDEN');
+  }
+  if (!data.fileName || !data.storagePath || !data.patientDid) {
+    throw new AppError('Document fileName, storagePath, and patientDid are required', 400, 'INVALID_DOCUMENT');
+  }
+  if (data.fileSize && data.fileSize > MAX_DOCUMENT_SIZE) {
+    throw new AppError('Medical documents must be 5 MB or smaller', 400, 'FILE_TOO_LARGE');
+  }
+  const doc = await repo.createDocument({ ...data, uploadedBy: uploader.did });
   blockchainClient.anchorRecord(token, doc.patientDid, doc.id, 'DOCUMENT', doc)
     .then(async ({ txId, recordHash }) => {
       await repo.updateDocumentBlockchain(doc.id, txId, recordHash).catch(() => {});

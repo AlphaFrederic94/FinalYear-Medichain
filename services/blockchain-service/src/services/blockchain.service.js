@@ -51,58 +51,81 @@ function mine(index, timestamp, data, previousHash) {
 async function ensureGenesisBlock() {
   const count = await prisma.block.count();
   if (count === 0) {
-    const index = 0;
-    const timestamp = new Date();
-    const data = { message: 'Genesis Block - AfriHealth Chain Initialized' };
-    const previousHash = '0'.repeat(64);
-    const { nonce, hash } = mine(index, timestamp.toISOString(), data, previousHash);
+    try {
+      const index = 0;
+      const timestamp = new Date();
+      const data = { message: 'Genesis Block - AfriHealth Chain Initialized' };
+      const previousHash = '0'.repeat(64);
+      const { nonce, hash } = mine(index, timestamp.toISOString(), data, previousHash);
 
-    await prisma.block.create({
-      data: {
-        index,
-        timestamp,
-        previousHash,
-        hash,
-        data,
-        nonce,
-      },
-    });
-    console.log('Genesis block created.');
+      await prisma.block.create({
+        data: {
+          index,
+          timestamp,
+          previousHash,
+          hash,
+          data,
+          nonce,
+        },
+      });
+      console.log('Genesis block created.');
+    } catch (err) {
+      if (err.code !== 'P2002') {
+        throw err;
+      }
+    }
+  }
+}
+
+let appendChain = Promise.resolve();
+
+/**
+ * Internal function to append a block with retries.
+ */
+async function _appendBlockInternal(data) {
+  await ensureGenesisBlock();
+
+  const maxAttempts = 5;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const latestBlock = await prisma.block.findFirst({
+        orderBy: { index: 'desc' },
+      });
+
+      const nextIndex = (latestBlock?.index ?? -1) + 1;
+      const timestamp = new Date();
+      const previousHash = latestBlock?.hash ?? '0'.repeat(64);
+
+      const timestampStr = timestamp.toISOString();
+      const { nonce, hash } = mine(nextIndex, timestampStr, data, previousHash);
+
+      return await prisma.block.create({
+        data: {
+          index: nextIndex,
+          timestamp,
+          previousHash,
+          hash,
+          data,
+          nonce,
+        },
+      });
+    } catch (err) {
+      if (err.code !== 'P2002' || attempt === maxAttempts) {
+        throw err;
+      }
+      await new Promise((resolve) => setTimeout(resolve, attempt * 30));
+    }
   }
 }
 
 /**
  * Appends a new block to the blockchain after mining it.
+ * Serializes executions using an in-memory promise chain to prevent race conditions.
  */
-async function appendBlock(data) {
-  await ensureGenesisBlock();
-
-  // Retrieve the latest block to link to
-  const latestBlock = await prisma.block.findFirst({
-    orderBy: { index: 'desc' },
-  });
-
-  const nextIndex = latestBlock.index + 1;
-  const timestamp = new Date();
-  const previousHash = latestBlock.hash;
-
-  // Mine the block
-  const timestampStr = timestamp.toISOString();
-  const { nonce, hash } = mine(nextIndex, timestampStr, data, previousHash);
-
-  // Store in database
-  const createdBlock = await prisma.block.create({
-    data: {
-      index: nextIndex,
-      timestamp,
-      previousHash,
-      hash,
-      data,
-      nonce,
-    },
-  });
-
-  return createdBlock;
+function appendBlock(data) {
+  const p = appendChain.then(() => _appendBlockInternal(data));
+  appendChain = p.catch(() => {});
+  return p;
 }
 
 /**
@@ -367,3 +390,4 @@ module.exports = {
   getBlocks,
   hashRecord,
 };
+

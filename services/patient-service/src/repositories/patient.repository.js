@@ -22,15 +22,10 @@ const upsert = (userDid, data) =>
     update: data,
   });
 
-const search = ({ query, did, phone, name }) => {
-  // DID lookup: exact match
-  if (did) {
-    return prisma.patient.findMany({ where: { userDid: did }, take: 5 });
-  }
-
-  // Build OR conditions from whichever fields are provided
-  const term = query || name || phone || '';
+const search = ({ query, phone, name }) => {
+  const term = (query || name || phone || '').trim();
   const conditions = [];
+
   if (query || name) {
     conditions.push(
       { firstName: { contains: term, mode: 'insensitive' } },
@@ -40,12 +35,18 @@ const search = ({ query, did, phone, name }) => {
   if (query || phone) {
     conditions.push({ phone: { contains: term } });
   }
-  if (query) {
-    conditions.push({ nationalId: { contains: term } });
-  }
 
   return prisma.patient.findMany({
     where: { OR: conditions.length ? conditions : [{ firstName: { contains: term, mode: 'insensitive' } }] },
+    select: {
+      userDid: true,
+      firstName: true,
+      lastName: true,
+      gender: true,
+      bloodGroup: true,
+      city: true,
+      phone: true,
+    },
     take: 20,
   });
 };
@@ -116,3 +117,4 @@ module.exports = {
   listEmergencyContacts,
   getAnalytics,
 };
+

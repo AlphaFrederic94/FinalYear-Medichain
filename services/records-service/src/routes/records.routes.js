@@ -7,6 +7,7 @@ const { validate } = require('../middleware/validate');
 const { encounterSchema, diagnosisSchema, prescriptionSchema, vitalsSchema } = require('../validators/records.validators');
 
 const PROVIDERS   = ['DOCTOR', 'NURSE', 'PHARMACIST', 'LAB_TECHNICIAN', 'FACILITY_ADMIN', 'MINISTRY_ADMIN', 'SUPER_ADMIN'];
+const DOCUMENT_UPLOADERS = ['PATIENT', ...PROVIDERS];
 const CLINICIANS  = ['DOCTOR', 'NURSE', 'FACILITY_ADMIN', 'MINISTRY_ADMIN', 'SUPER_ADMIN'];
 const PHARMACISTS = ['PHARMACIST', 'DOCTOR', 'FACILITY_ADMIN', 'SUPER_ADMIN'];
 
@@ -301,7 +302,7 @@ router.get('/summary/:did', authenticate, consentCheck, ctrl.getSummary);
  *     responses:
  *       201: { description: Uploaded }
  */
-router.post('/documents', authenticate, authorize(...PROVIDERS), ctrl.uploadDocument);
+router.post('/documents', authenticate, authorize(...DOCUMENT_UPLOADERS), ctrl.uploadDocument);
 
 /**
  * @openapi
@@ -353,3 +354,4 @@ const ADMIN_ROLES = ['MINISTRY_ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN'];
 router.get('/analytics', authenticate, authorize(...ADMIN_ROLES), ctrl.getAnalytics);
 
 module.exports = router;
+

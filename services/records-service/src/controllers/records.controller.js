@@ -29,7 +29,7 @@ module.exports = {
   getSummary:           wrap((req) => svc.getSummary(req.params.did)),
 
   // Documents
-  uploadDocument:       wrap((req) => svc.uploadDocument(req.headers.authorization, req.user.did, req.body)),
+  uploadDocument:       wrap((req) => svc.uploadDocument(req.headers.authorization, req.user, req.body)),
   getPatientDocuments:  wrap((req) => svc.getPatientDocuments(req.params.did)),
 
   // Provider records
@@ -38,3 +38,4 @@ module.exports = {
   // Analytics
   getAnalytics:         wrap(() => svc.getAnalytics()),
 };
+

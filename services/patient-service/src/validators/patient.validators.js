@@ -27,11 +27,10 @@ const emergencyContactSchema = z.object({
 
 const searchSchema = z.object({
   query: z.string().min(1).max(100).optional(),
-  did:   z.string().min(1).max(200).optional(),
   phone: z.string().min(1).max(30).optional(),
   name:  z.string().min(1).max(200).optional(),
 }).refine(
-  (d) => d.query || d.did || d.phone || d.name,
+  (d) => d.query || d.phone || d.name,
   { message: 'At least one search parameter is required' }
 );
 
@@ -41,3 +40,4 @@ module.exports = {
   emergencyContactSchema,
   searchSchema,
 };
+
