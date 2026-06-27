@@ -352,6 +352,8 @@ const ADMIN_ROLES = ['MINISTRY_ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN'];
  *       200: { description: Success }
  */
 router.get('/analytics', authenticate, authorize(...ADMIN_ROLES), ctrl.getAnalytics);
+router.get('/admin/prescriptions', authenticate, authorize(...ADMIN_ROLES), ctrl.getAllPrescriptions);
+router.get('/admin/diagnoses', authenticate, authorize(...ADMIN_ROLES), ctrl.getAllDiagnoses);
 
 module.exports = router;
 

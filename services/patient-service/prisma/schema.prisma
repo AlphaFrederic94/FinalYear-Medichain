@@ -35,6 +35,8 @@ model Patient {
   languagePref      String             @default("fr")
   address           String?
   city              String?
+  assignedDoctorDid String?
+  assignedDoctorName String?
   allergies         Allergy[]
   emergencyContacts EmergencyContact[]
   createdAt         DateTime           @default(now())

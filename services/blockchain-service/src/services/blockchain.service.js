@@ -376,6 +376,19 @@ async function getBlocks() {
   });
 }
 
+async function getAllLogs() {
+  const blocks = await prisma.block.findMany({
+    orderBy: { index: 'desc' },
+  });
+  return blocks.map((b) => ({
+    index: b.index,
+    txId: b.hash,
+    previousHash: b.previousHash,
+    timestamp: b.timestamp,
+    ...(b.data && typeof b.data === 'object' ? b.data : { rawData: b.data }),
+  }));
+}
+
 module.exports = {
   appendBlock,
   validateChain,
@@ -388,6 +401,7 @@ module.exports = {
   getAuditTrail,
   getConsentHistory,
   getBlocks,
+  getAllLogs,
   hashRecord,
 };
 

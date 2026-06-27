@@ -19,6 +19,7 @@ router.get('/audit/:patientDid', authenticate, ctrl.getAuditTrail);
 
 // System / Admin utilities
 router.get('/blocks', authenticate, ctrl.getBlocks);
+router.get('/logs', authenticate, ctrl.getAllLogs);
 router.get('/validate', authenticate, ctrl.validateChain);
 
 module.exports = router;

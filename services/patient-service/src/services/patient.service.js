@@ -73,6 +73,14 @@ const updatePatientByDid = async (targetDid, data) => {
   return repo.upsert(targetDid, data);
 };
 
+const listAllPatients = async () => {
+  return repo.listAll();
+};
+
+const assignDoctor = async (userDid, assignedDoctorDid, assignedDoctorName) => {
+  return repo.assignDoctor(userDid, assignedDoctorDid, assignedDoctorName);
+};
+
 module.exports = {
   getMyProfile,
   updateMyProfile,
@@ -86,4 +94,6 @@ module.exports = {
   getSummary,
   getAnalytics,
   updatePatientByDid,
+  listAllPatients,
+  assignDoctor,
 };

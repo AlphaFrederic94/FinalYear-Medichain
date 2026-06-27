@@ -33,11 +33,13 @@ const getMyProfile = async (userDid) => {
   return s || null; // null = no staff profile yet (not an error)
 };
 
+const listStaff = () => repo.listStaff();
+
 const getSpecialties = () => repo.SPECIALTIES;
 const getAnalytics   = () => repo.getAnalytics();
 
 module.exports = {
   registerFacility, listFacilities, getFacility,
-  registerStaff, getStaffByDid, updateStaff, getMyProfile, getSpecialties,
+  registerStaff, listStaff, getStaffByDid, updateStaff, getMyProfile, getSpecialties,
   getAnalytics,
 };

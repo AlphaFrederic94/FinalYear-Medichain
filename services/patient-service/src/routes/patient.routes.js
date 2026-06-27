@@ -155,6 +155,8 @@ router.delete('/me/emergency-contacts/:id', authenticate, authorize('PATIENT'), 
 // ── Analytics ─────────────────────────────────────────────────────────────────
 const ADMIN_ROLES = ['MINISTRY_ADMIN', 'SUPER_ADMIN', 'FACILITY_ADMIN'];
 router.get('/analytics', authenticate, authorize(...ADMIN_ROLES), ctrl.getAnalytics);
+router.get('/all/list', authenticate, authorize(...ADMIN_ROLES, ...PROVIDER_ROLES), ctrl.listAllPatients);
+router.put('/:did/assign', authenticate, authorize(...ADMIN_ROLES), ctrl.assignDoctor);
 
 // ── Provider access ───────────────────────────────────────────────────────────
 /**

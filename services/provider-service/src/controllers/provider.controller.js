@@ -12,6 +12,7 @@ module.exports = {
 
   // Staff
   registerStaff:  wrap((req) => svc.registerStaff(req.user.did, req.body)),
+  listStaff:      wrap(() => svc.listStaff()),
   getStaffByDid:  wrap((req) => svc.getStaffByDid(req.params.did)),
   updateStaff:    wrap((req) => svc.updateStaff(req.params.did, req.body)),
   getMyProfile:   wrap((req) => svc.getMyProfile(req.user.did)),

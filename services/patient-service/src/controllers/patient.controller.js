@@ -25,6 +25,8 @@ const deleteContact       = async (req, res, next) => {
 
 const getAnalytics = wrap(() => svc.getAnalytics());
 const updatePatientByDid = wrap((req) => svc.updatePatientByDid(req.params.did, req.body));
+const listAllPatients = wrap(() => svc.listAllPatients());
+const assignDoctor = wrap((req) => svc.assignDoctor(req.params.did, req.body.assignedDoctorDid, req.body.assignedDoctorName));
 
 module.exports = {
   getMe, updateMe, getByDid, search, getSummary,
@@ -32,4 +34,6 @@ module.exports = {
   listContacts, addContact, deleteContact,
   getAnalytics,
   updatePatientByDid,
+  listAllPatients,
+  assignDoctor,
 };

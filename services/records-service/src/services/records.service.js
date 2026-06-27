@@ -131,6 +131,9 @@ const getProviderRecords = (providerDid) => repo.getProviderRecords(providerDid)
 // ── Analytics ─────────────────────────────────────────────────────────────────
 const getAnalytics = () => repo.getAnalytics();
 
+const getAllPrescriptions = () => repo.listAllPrescriptions();
+const getAllDiagnoses = () => repo.listAllDiagnoses();
+
 module.exports = {
   createEncounter, getEncounter, getPatientRecords,
   addDiagnosis, getPatientDiagnoses,
@@ -140,4 +143,6 @@ module.exports = {
   uploadDocument, getPatientDocuments,
   getProviderRecords,
   getAnalytics,
+  getAllPrescriptions,
+  getAllDiagnoses,
 };

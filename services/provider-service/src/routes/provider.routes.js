@@ -147,6 +147,7 @@ router.post('/staff',        authenticate, authorize(...STAFF), validate(staffSc
  *     responses:
  *       200: { description: Success }
  */
+router.get('/staff',         authenticate, ctrl.listStaff);
 router.get('/staff/:did',    authenticate, ctrl.getStaffByDid);
 router.put('/staff/:did',    authenticate, authorize(...STAFF), validate(updateStaffSchema), ctrl.updateStaff);
 

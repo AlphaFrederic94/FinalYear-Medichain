@@ -12,6 +12,7 @@ const findStaffByDid    = (userDid) => prisma.staff.findUnique({ where: { userDi
 const findStaffById     = (id) => prisma.staff.findUnique({ where: { id }, include: { facility: true } });
 const updateStaff       = (userDid, data) => prisma.staff.update({ where: { userDid }, data, include: { facility: true } });
 const listStaffByFacility = (facilityId) => prisma.staff.findMany({ where: { facilityId }, include: { facility: true } });
+const listStaff         = (filters = {}) => prisma.staff.findMany({ where: filters, include: { facility: true } });
 
 const SPECIALTIES = [
   'General Practice', 'Internal Medicine', 'Pediatrics', 'Obstetrics & Gynecology',
@@ -44,7 +45,7 @@ const getAnalytics = async () => {
 
 module.exports = {
   createFacility, listFacilities, findFacilityById,
-  createStaff, findStaffByDid, findStaffById, updateStaff, listStaffByFacility,
+  createStaff, findStaffByDid, findStaffById, updateStaff, listStaffByFacility, listStaff,
   SPECIALTIES,
   getAnalytics,
 };

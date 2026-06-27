@@ -56,5 +56,7 @@ module.exports = {
 
   getBlocks: wrap(() => svc.getBlocks()),
 
+  getAllLogs: wrap(() => svc.getAllLogs()),
+
   validateChain: wrap(() => svc.validateChain()),
 };

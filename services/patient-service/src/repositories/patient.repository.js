@@ -46,10 +46,23 @@ const search = ({ query, phone, name }) => {
       bloodGroup: true,
       city: true,
       phone: true,
+      assignedDoctorDid: true,
+      assignedDoctorName: true,
     },
-    take: 20,
+    take: 50,
   });
 };
+
+const listAll = () =>
+  prisma.patient.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
+
+const assignDoctor = (userDid, assignedDoctorDid, assignedDoctorName) =>
+  prisma.patient.update({
+    where: { userDid },
+    data: { assignedDoctorDid, assignedDoctorName },
+  });
 
 // ── Allergies ─────────────────────────────────────────────────────────────────
 
@@ -116,5 +129,7 @@ module.exports = {
   deleteEmergencyContact,
   listEmergencyContacts,
   getAnalytics,
+  listAll,
+  assignDoctor,
 };
 

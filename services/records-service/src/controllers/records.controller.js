@@ -37,5 +37,8 @@ module.exports = {
 
   // Analytics
   getAnalytics:         wrap(() => svc.getAnalytics()),
+
+  getAllPrescriptions:  wrap(() => svc.getAllPrescriptions()),
+  getAllDiagnoses:      wrap(() => svc.getAllDiagnoses()),
 };
 

@@ -154,6 +154,16 @@ const updateVitalsBlockchain = (id, blockchainTxId, recordHash) =>
 const updateDocumentBlockchain = (id, blockchainTxId, recordHash) =>
   prisma.document.update({ where: { id }, data: { blockchainTxId, recordHash } });
 
+const listAllPrescriptions = () =>
+  prisma.prescription.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
+
+const listAllDiagnoses = () =>
+  prisma.diagnosis.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
+
 module.exports = {
   createEncounter, findEncounterById, listEncountersByPatient,
   createDiagnosis, listDiagnosesByPatient,
@@ -167,4 +177,6 @@ module.exports = {
   updatePrescriptionBlockchain,
   updateVitalsBlockchain,
   updateDocumentBlockchain,
+  listAllPrescriptions,
+  listAllDiagnoses,
 };
