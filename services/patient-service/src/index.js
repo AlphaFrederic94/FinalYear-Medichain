@@ -17,7 +17,7 @@ const prisma = new PrismaClient();
 
 app.use(helmet());
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(morgan('combined', { stream: { write: (m) => logger.info(m.trim()) } }));
 
 const swaggerSpec = swaggerJsdoc({

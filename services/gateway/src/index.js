@@ -55,6 +55,7 @@ const swaggerOptions = {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(null, swaggerOptions));
 
 const proxyOptions = (target) => ({
+  limit: '10mb',
   proxyReqPathResolver: (req) => req.originalUrl.replace(/^\/api\/v1\/[^/]+/, '') || '/',
   proxyErrorHandler: (err, res) => {
     logger.error('Proxy error', { target, err: err.message });
